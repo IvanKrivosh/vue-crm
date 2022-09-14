@@ -1,9 +1,18 @@
 <template>
-  <component :is="layout"></component>
+  <component v-if="layout" :is="layout">
+    <router-view></router-view>
+  </component>
 </template>
 
 <script setup>
-import EmptyLayout from '@/layouts/EmptyLayout.vue';
+const modules = {
+  EmptyLayout: import.meta.glob('@/layouts/EmptyLayout.vue', {
+    import: 'default',
+  }),
+  MainLayout: import.meta.glob('@/layouts/MainLayout.vue', {
+    import: 'default',
+  }),
+};
 import { markRaw, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 const layout = ref();
@@ -12,10 +21,13 @@ watch(
   route,
   async ({ meta }) => {
     try {
-      const component = meta.layout && (await import(`./${meta.layout}.vue`));
-      layout.value = markRaw(component?.default || EmptyLayout);
+      if (meta.layout)
+        Object.entries(modules[meta.layout])[0][1]().then(component => {
+          layout.value = markRaw(component);
+        });
     } catch (e) {
-      layout.value = markRaw(EmptyLayout);
+      console.log(e);
+      layout.value = markRaw(null);
     }
   },
   { immediate: true },

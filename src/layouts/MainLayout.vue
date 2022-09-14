@@ -1,10 +1,10 @@
 <template>
-  MAIN
+  <Header></Header>
+  <Sidebar></Sidebar>
   <slot></slot>
 </template>
 
-<script>
-export default {
-  name: 'MainLayout',
-};
+<script setup>
+import Header from '@/components/Header.vue';
+import Sidebar from '@/components/Sidebar.vue';
 </script>
