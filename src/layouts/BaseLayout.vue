@@ -5,14 +5,12 @@
 </template>
 
 <script setup>
-const modules = {
-  EmptyLayout: import.meta.glob('@/layouts/EmptyLayout.vue', {
-    import: 'default',
-  }),
-  MainLayout: import.meta.glob('@/layouts/MainLayout.vue', {
-    import: 'default',
-  }),
-};
+const layouts = {};
+Object.entries(
+  import.meta.glob('@/layouts/*.vue', { import: 'default' }),
+).forEach(([path, func]) => {
+  layouts[path.match(/(?<=\/)([a-zA-Z]*)(?=\.)/)[0]] = func;
+});
 import { markRaw, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 const layout = ref();
@@ -21,13 +19,11 @@ watch(
   route,
   async ({ meta }) => {
     try {
-      if (meta.layout)
-        Object.entries(modules[meta.layout])[0][1]().then(component => {
-          layout.value = markRaw(component);
-        });
+      const component = meta.layout && (await layouts[meta.layout]());
+      layout.value = component ? markRaw(component) : null;
     } catch (e) {
       console.log(e);
-      layout.value = markRaw(null);
+      layout.value = null;
     }
   },
   { immediate: true },
